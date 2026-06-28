@@ -1,8 +1,12 @@
 package com.example.user.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
+import com.example.user.dto.role.RoleResponse;
 import com.example.user.exception.ResourceNotFoundException;
+import com.example.user.mapper.RoleMapper;
 import com.example.user.models.Organisation;
 import com.example.user.models.Role;
 import com.example.user.repository.RoleRepository;
@@ -11,14 +15,18 @@ import com.example.user.repository.RoleRepository;
 public class RoleService {
     private final RoleRepository roleRepository;
     private final OrganisationService organisationService;
+    private final RoleMapper roleMapper;
+    
     private final static String PREFIX = "ROlE_";
 
     public RoleService(
         RoleRepository roleRepository,
-        OrganisationService organisationsService
+        OrganisationService organisationsService,
+        RoleMapper roleMapper
     ){
         this.roleRepository = roleRepository;
         this.organisationService = organisationsService;
+        this.roleMapper = roleMapper;
     }
 
     public Role createRole(String name, Organisation organisation){
@@ -47,5 +55,9 @@ public class RoleService {
             .orElseThrow(() -> new ResourceNotFoundException("role not found"));
     }
 
+    public List<RoleResponse> getRoles(Long organisationId){
+        List<Role> roles = roleRepository.findByOrganisation_Id(organisationId);
+        return roleMapper.toRoleResponseList(roles);
+    }
 
 }

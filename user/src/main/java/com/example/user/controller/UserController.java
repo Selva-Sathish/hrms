@@ -5,11 +5,15 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.user.common.ApiResponse;
+import com.example.user.dto.user.ManagerUserResponse;
+import com.example.user.dto.user.UserPatchRequest;
 import com.example.user.models.User;
 import com.example.user.service.UserService;
 
@@ -33,6 +37,14 @@ public class UserController {
     @GetMapping("/{id}")
     public User getUser(@PathVariable Long id){
         return userService.getUserId(id);
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<ApiResponse<ManagerUserResponse>> updateUser(@PathVariable Long id, @RequestBody UserPatchRequest request){
+        ManagerUserResponse response =  userService.patchUpdate(id, request);
+        return ResponseEntity
+            .ok()
+            .body(new ApiResponse<>(true, "user updated successfully", response));
     }
 
     @DeleteMapping("/{id}")

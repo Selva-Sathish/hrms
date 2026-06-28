@@ -2,8 +2,12 @@ package com.example.user.service;
 
 import java.util.List;
 import org.springframework.stereotype.Service;
+
+import com.example.user.dto.user.ManagerUserResponse;
+import com.example.user.dto.user.UserPatchRequest;
 import com.example.user.exception.ResourceAlreadyExists;
 import com.example.user.exception.ResourceNotFoundException;
+import com.example.user.mapper.UserMapper;
 import com.example.user.models.User;
 import com.example.user.repository.UserRepository;
 import com.example.user.security.utils.SecurityUtils;
@@ -13,13 +17,16 @@ import com.example.user.security.utils.SecurityUtils;
 public class UserService {
     private final UserRepository userRepository;
     private final SecurityUtils securityUtils;
+    private final UserMapper userMapper;
     
     public UserService(
         UserRepository userRepository,
-        SecurityUtils securityUtils
+        SecurityUtils securityUtils,
+        UserMapper userMapper
     ){
         this.userRepository = userRepository;
         this.securityUtils = securityUtils;
+        this.userMapper = userMapper;
     }
     
 
@@ -48,6 +55,13 @@ public class UserService {
                         .orElseThrow(() -> new ResourceNotFoundException("user not found"));
         
         return user;
+    }
+
+
+    public ManagerUserResponse patchUpdate(Long id, UserPatchRequest request) {
+        User user = getUserId(id);
+        userMapper.updateUserFromPatchDto(request, user);
+        return userMapper.toManagerResponse(user);
     }
 
 }
