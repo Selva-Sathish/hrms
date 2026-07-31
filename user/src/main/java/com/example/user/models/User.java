@@ -5,15 +5,15 @@ import java.time.LocalDate;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -46,36 +46,37 @@ public class User {
     @Column(unique = true)
     private String email;
     
-    @Column(nullable = false)
     private String password;
 
     private LocalDate dateOfBirth;
     
-    @OneToOne(cascade = CascadeType.REMOVE)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organisation_id", nullable = false)
     private Organisation organisation; 
 
-    @OneToOne(cascade = CascadeType.REMOVE)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
-    private boolean isDeleted;
+    private boolean deleted;
 
     @CreationTimestamp
-    @Column(insertable = false, updatable = false)
+    @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
-    private Instant DeletedAt;
+    private Instant deletedAt;
     
     @UpdateTimestamp
-    @Column(insertable = false)
+    @Column(nullable = false)
     private Instant updatedAt;
 
-    private boolean isActive;
+    private boolean active;
     
-    private boolean isVerified;
+    private boolean verified;
 
     private boolean accountLocked;
 
-    private boolean failedLoginAttempts;
+    private int failedLoginAttempts;
 
     private Instant lockedAt;
     

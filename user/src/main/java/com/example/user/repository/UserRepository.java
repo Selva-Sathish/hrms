@@ -15,7 +15,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findByOrganisationId(Long organisationId);
 
-    List<User> findByOrganisation_IdAndIsDeletedFalse(Long organisationId);
+    List<User> findByOrganisation_IdAndDeletedFalse(Long organisationId);
 
     Optional<User> findByIdAndOrganisationId(Long userId, Long organisationId);
     

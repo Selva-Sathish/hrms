@@ -29,7 +29,7 @@ public class JwtService {
     private String generateToken(User user, long expiration){
         return Jwts
             .builder()
-            .subject(user.getUsername())
+            .subject(user.getEmail())
             .claim("role", user.getRole().getName())
             .claim("userId", user.getId())
             .claim("organisationId", user.getOrganisation().getId())
@@ -46,7 +46,7 @@ public class JwtService {
     }
 
     public boolean isTokenValid(String token){
-        return !isTokenExpired(token); 
+        return isTokenExpired(token); 
     }
 
     public Long getOrganisation(String token){
@@ -62,7 +62,7 @@ public class JwtService {
     }
 
     private boolean isTokenExpired(String token){
-        return extractAllClaims(token).getExpiration().after(new Date());
+        return extractAllClaims(token).getExpiration().before(new Date());
     }
 
     private Claims extractAllClaims(String token){

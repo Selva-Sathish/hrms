@@ -45,31 +45,33 @@ public class JwtFilter extends OncePerRequestFilter{
         
         Optional<Cookie> cookie = Arrays
                 .stream(cookies)
-                .filter(c -> c.getName().equals("access_token"))
+                .filter(c -> "access_token".equals(c.getName()))
                 .findFirst();
-        
         
         if(cookie.isEmpty()){
             filterChain.doFilter(request, response);
             return;
         }
-        System.out.println("after cookoie check");
         try {
             String authToken = cookie.get().getValue();
             Long userId = jwtUtils.getUserId(authToken);
             Long organisation = jwtUtils.getOrganisation(authToken);
             String role = jwtUtils.getRole(authToken);
-            UserDetailPrinciple principle = new UserDetailPrinciple(
-                userId, organisation, role
-            );
-            
-            UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
-                principle,
-                null,
-                Collections.singleton(new SimpleGrantedAuthority(role))
-            );
-    
-            SecurityContextHolder.getContext().setAuthentication(token);
+            if(SecurityContextHolder.getContext().getAuthentication() == null){
+
+                UserDetailPrinciple principle = new UserDetailPrinciple(
+                    userId, organisation, role
+                );
+                
+                UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
+                    principle,
+                    null,
+                    Collections.singleton(new SimpleGrantedAuthority(role))
+                );
+                
+                SecurityContextHolder.getContext().setAuthentication(token);
+
+            }
             
         } catch (JwtException e) {
             log.error(e.getMessage());
@@ -77,7 +79,7 @@ public class JwtFilter extends OncePerRequestFilter{
             response.getWriter().write("Invalid or token expired");
             return;
         }
-
+        
         filterChain.doFilter(request, response);
     }
     

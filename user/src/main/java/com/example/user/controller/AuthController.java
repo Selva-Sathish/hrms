@@ -6,15 +6,16 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.user.common.ApiResponse;
-import com.example.user.dto.CreateUserRequest;
-import com.example.user.dto.LoginRequest;
-import com.example.user.dto.TokenResponse;
+import com.example.user.dto.user.CreateUserRequest;
+import com.example.user.dto.auth.LoginRequest;
+import com.example.user.dto.auth.TokenResponse;
 import com.example.user.service.AuthService;
 
 import jakarta.validation.Valid;
@@ -68,4 +69,17 @@ public class AuthController {
             .body(new ApiResponse<TokenResponse>(true, "Login successfull", null));
     
     }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<?>> refresh(
+        @CookieValue("refresh_token") String refreshToken
+    ){
+        System.out.println(refreshToken);
+        ResponseCookie token = authService.createRefreshToken(refreshToken);   
+        return ResponseEntity
+            .ok()
+            .header(HttpHeaders.SET_COOKIE, token.toString())
+            .body(new ApiResponse<>(true, "login successful", null));
+    }
+
 }

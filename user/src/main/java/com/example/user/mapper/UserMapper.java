@@ -7,7 +7,9 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.ReportingPolicy;
 
-import com.example.user.dto.CreateUserRequest;
+import com.example.user.dto.user.CreateUserRequest;
+import com.example.user.dto.event.UserCreateEvent;
+import com.example.user.dto.user.AdminCreateUserRequest;
 import com.example.user.dto.user.AdminUserResponse;
 import com.example.user.dto.user.ManagerUserResponse;
 import com.example.user.dto.user.UserPatchRequest;
@@ -49,4 +51,10 @@ public interface UserMapper {
     @Mapping(target = "active", ignore = true)
     @Mapping(target = "verified", ignore = true)
     void updateUserFromPatchDto(UserPatchRequest request, @MappingTarget User user);
+
+    @BeanMapping(unmappedTargetPolicy = ReportingPolicy.IGNORE)
+    User adminUserCreateUser(AdminCreateUserRequest request);
+
+    UserCreateEvent toUserCreateEvent(User user);
+    
 }

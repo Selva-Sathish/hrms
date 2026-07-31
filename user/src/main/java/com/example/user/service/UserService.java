@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 
 import com.example.user.dto.user.ManagerUserResponse;
 import com.example.user.dto.user.UserPatchRequest;
-import com.example.user.exception.ResourceAlreadyExists;
 import com.example.user.exception.ResourceNotFoundException;
 import com.example.user.mapper.UserMapper;
 import com.example.user.models.User;
@@ -18,24 +17,20 @@ public class UserService {
     private final UserRepository userRepository;
     private final SecurityUtils securityUtils;
     private final UserMapper userMapper;
+    private final UserValidationService userValidationService;
     
     public UserService(
         UserRepository userRepository,
         SecurityUtils securityUtils,
-        UserMapper userMapper
+        UserMapper userMapper,
+        UserValidationService userValidationService
     ){
         this.userRepository = userRepository;
         this.securityUtils = securityUtils;
         this.userMapper = userMapper;
+        this.userValidationService = userValidationService;
     }
     
-
-    public void validEmailNotExists(String name){
-        if(userRepository.existsByEmail(name)){
-            throw new ResourceAlreadyExists("email already exists");
-        }    
-    }
-
     public User getByEmail(String email){
         return userRepository.findByEmail(email)
             .orElseThrow(() -> new ResourceNotFoundException("email is not registered"));
@@ -43,7 +38,7 @@ public class UserService {
 
     public List<User> getUsers(){
         Long organisationId = securityUtils.getCurrentOrganisationId();
-        List<User> users =  userRepository.findByOrganisation_IdAndIsDeletedFalse(organisationId);
+        List<User> users =  userRepository.findByOrganisation_IdAndDeletedFalse(organisationId);
         return users;
     }
 

@@ -18,15 +18,14 @@ public class AdminUserResponse {
     private Long roleId;
     private String roleName;
 
-    private boolean isDeleted;
+    private boolean deleted;
     private Instant deletedAt;
 
-    private boolean isActive;
-    private boolean isVerified;
+    private boolean active;
+    private boolean verified;
     private boolean accountLocked;
 
     private Instant lastLogin;
     private Instant createdAt;
     private Instant updatedAt;
-
 }
