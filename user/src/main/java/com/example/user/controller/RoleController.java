@@ -64,11 +64,11 @@ public class RoleController {
         @PathVariable Long id, 
         @Valid @RequestBody RoleRequest request
     ){
-        roleService.updateRole(id, request);
+        RoleResponse response = roleService.updateRole(id, request);
         return ResponseEntity
             .ok()
             .body(
-                new ApiResponse<>(true, "role updated successfully", null)
+                new ApiResponse<>(true, "role updated successfully", response)
             );
     }
 

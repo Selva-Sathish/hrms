@@ -1,12 +1,7 @@
 package com.example.user.service;
 
 import java.util.List;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-import com.example.user.common.ApiResponse;
 import com.example.user.dto.role.RoleRequest;
 import com.example.user.dto.role.RoleResponse;
 import com.example.user.exception.ResourceAlreadyExists;
@@ -18,7 +13,6 @@ import com.example.user.repository.RoleRepository;
 import com.example.user.security.utils.SecurityUtils;
 
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 @Service
 public class RoleService {
@@ -94,18 +88,15 @@ public class RoleService {
     }
 
 
-    public ResponseEntity<ApiResponse<?>> updateRole(Long id, RoleRequest request) {
+    public RoleResponse updateRole(Long id, RoleRequest request) {
         Long organisationId = securityUtils.getCurrentOrganisationId();
         Role role = roleRepository.findByIdAndOrganisation_Id(id, organisationId)
             .orElseThrow(() -> new ResourceNotFoundException("role not found"));
         
-        Role updateRole = roleMapper.toEntity(role, request);
-        RoleResponse response = roleMapper.toRoleResponse(updateRole);
-        return ResponseEntity
-            .ok()
-            .body(
-                new ApiResponse<>(true, "role updated successfully", response)
-            );
+        roleMapper.toEntity(role, request);
+        roleRepository.save(role);
+        return roleMapper.toRoleResponse(role);
+
     }
 
 }

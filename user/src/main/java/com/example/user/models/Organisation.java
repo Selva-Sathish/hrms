@@ -37,11 +37,11 @@ public class Organisation {
         mappedBy = "organisation",
         cascade = CascadeType.REMOVE
     )
-    List<Role> roles = new ArrayList<>();
+    List<Role> role = new ArrayList<>();
 
     @OneToMany(
         mappedBy = "organisation",
         cascade = CascadeType.REMOVE
     )
-    List<User> users = new ArrayList<>();
+    List<User> user = new ArrayList<>();
 }

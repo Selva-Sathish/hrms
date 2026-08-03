@@ -4,19 +4,30 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.example.user.dto.organisation.OrganisationRequest;
 import com.example.user.exception.BadRequestException;
 import com.example.user.exception.ResourceAlreadyExists;
 import com.example.user.exception.ResourceNotFoundException;
+import com.example.user.mapper.OrganisationMapper;
 import com.example.user.models.Organisation;
 import com.example.user.repository.OrganisationRepository;
 import com.example.user.security.dao.UserDetailPrinciple;
+import com.example.user.security.utils.SecurityUtils;
 
 @Service
 public class OrganisationService {
     private final OrganisationRepository organisationRepository;
+    private final SecurityUtils securityUtils;
+    private final OrganisationMapper organisationMapper;
 
-    public OrganisationService(OrganisationRepository organisationRepository){
+    public OrganisationService(
+        OrganisationRepository organisationRepository,
+        SecurityUtils securityUtils,
+        OrganisationMapper organisationMapper
+    ){
         this.organisationRepository = organisationRepository;
+        this.securityUtils = securityUtils;
+        this.organisationMapper = organisationMapper;
     }
 
 
@@ -59,5 +70,20 @@ public class OrganisationService {
             .orElseThrow(() -> new ResourceNotFoundException("organisation not found"));
         
         organisationRepository.delete(organisation);
+    }
+
+
+    public void updateOrganisation(Long id, OrganisationRequest request) {
+        Long organisationId = securityUtils.getCurrentOrganisationId();
+        if(id != organisationId){
+            throw new BadRequestException("organisation not found");
+        }
+        Organisation organisation = organisationRepository.findById(organisationId)
+            .orElseThrow(
+                () ->  new ResourceNotFoundException("organisation not found")
+            );
+        
+        organisationMapper.toEntity(organisation, request);
+        organisationRepository.save(organisation);
     }
 }

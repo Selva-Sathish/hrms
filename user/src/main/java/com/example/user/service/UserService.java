@@ -17,18 +17,15 @@ public class UserService {
     private final UserRepository userRepository;
     private final SecurityUtils securityUtils;
     private final UserMapper userMapper;
-    private final UserValidationService userValidationService;
     
     public UserService(
         UserRepository userRepository,
         SecurityUtils securityUtils,
-        UserMapper userMapper,
-        UserValidationService userValidationService
+        UserMapper userMapper
     ){
         this.userRepository = userRepository;
         this.securityUtils = securityUtils;
         this.userMapper = userMapper;
-        this.userValidationService = userValidationService;
     }
     
     public User getByEmail(String email){
