@@ -1,10 +1,15 @@
 package com.example.user.service;
 
+import java.time.Instant;
+
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.example.user.dto.event.UserCreateEvent;
 import com.example.user.dto.user.AdminCreateUserRequest;
-
+import com.example.user.dto.user.AdminUserResponse;
+import com.example.user.dto.user.UserPatchRequest;
+import com.example.user.exception.ResourceNotFoundException;
 import com.example.user.kafka.producer.UserProducer;
 import com.example.user.mapper.UserMapper;
 import com.example.user.models.Organisation;
@@ -14,6 +19,7 @@ import com.example.user.repository.UserRepository;
 import com.example.user.security.utils.SecurityUtils;
 
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 
 @Service
 public class AdminUserService {
@@ -62,5 +68,29 @@ public class AdminUserService {
         userProducer.publishUserCreated(event);
     }
 
-    
+    @Transactional
+    public void deleteUser(Long id) {
+        Long organisationId = securityUtils.getCurrentOrganisationId();
+        if(!userRepository.existsByIdAndOrganisation_Id(id, organisationId)){
+            throw new ResourceNotFoundException("user not found");
+        }   
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new UsernameNotFoundException("user not found"));
+        user.setDeleted(true);
+        user.setDeletedAt(Instant.now());
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public AdminUserResponse updateUser(Long id, UserPatchRequest request) {
+        Long organisationId = securityUtils.getCurrentOrganisationId();
+        User user = userRepository.findByIdAndOrganisation_Id(id, organisationId)
+            .orElseThrow(() -> new UsernameNotFoundException("user not found"));
+        
+        userMapper.updateUserFromPatchDto(request, user);
+        AdminUserResponse response = userMapper.toAdminResponse(user); 
+        return response;
+    }
+
+
 }

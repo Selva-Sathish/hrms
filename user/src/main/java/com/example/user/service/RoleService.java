@@ -93,7 +93,9 @@ public class RoleService {
         Role role = roleRepository.findByIdAndOrganisation_Id(id, organisationId)
             .orElseThrow(() -> new ResourceNotFoundException("role not found"));
         
-        roleMapper.toEntity(role, request);
+        // roleMapper.toEntity(role, request);
+        role.setName(PREFIX + request.getName());
+        
         roleRepository.save(role);
         return roleMapper.toRoleResponse(role);
 
