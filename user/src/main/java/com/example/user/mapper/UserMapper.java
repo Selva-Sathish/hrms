@@ -57,4 +57,5 @@ public interface UserMapper {
 
     UserCreateEvent toUserCreateEvent(User user);
     
+    // AdminUserResponse toAdminUserResponse();
 }

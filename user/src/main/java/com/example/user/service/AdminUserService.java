@@ -60,6 +60,7 @@ public class AdminUserService {
         user = userRepository.save(user);
         UserCreateEvent event =  userMapper.toUserCreateEvent(user);
         userProducer.publishUserCreated(event);
-
     }
+
+    
 }
