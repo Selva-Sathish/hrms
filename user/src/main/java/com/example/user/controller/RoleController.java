@@ -27,7 +27,6 @@ public class RoleController {
     private final RoleService roleService;
     private final SecurityUtils securityUtils;
 
-    
     public RoleController(
         RoleService roleService,
         SecurityUtils securityUtils

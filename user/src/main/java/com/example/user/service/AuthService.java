@@ -1,6 +1,8 @@
 package com.example.user.service;
 
 import java.time.Duration;
+import java.time.Instant;
+
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,8 @@ public class AuthService {
     private final JwtService jwtService;
     private UserValidationService userValidationService;
     
+    private final int MAX_LIMIT = 5;
+    private final int RESET_LIMIT = 0;
     public AuthService(
         UserService userService,
         UserRepository userRepository,
@@ -76,15 +80,44 @@ public class AuthService {
         userProducer.publishUserCreated(event);
     }
 
-    
+    public boolean isAccountLocked(User user){
+        return user.isAccountLocked()
+            && user.getLockedAt() != null
+            && user.getLockedAt()
+                .plus(Duration.ofMinutes(15))
+                .isAfter(Instant.now());
+    }
+
+    public void refreshLoginAttempts(User user){
+        user.setAccountLocked(false);
+        user.setFailedLoginAttempts(RESET_LIMIT);
+        user.setLockedAt(null);
+    }
+
+    @Transactional
     public TokenResponse login(LoginRequest request) {
-        
         User user = userService.getByEmail(request.email());
+        
+        if (user.isAccountLocked() && !isAccountLocked(user)) {
+            refreshLoginAttempts(user);
+            userRepository.save(user);
+        }
+
+        if(isAccountLocked(user)){
+            throw new BadRequestException("Accouny has been locked until " + user.getLockedAt());
+        }
         if(!passwordEncoder.matches(request.password(), user.getPassword())){
-            throw new BadRequestException("credential invalid");
+            user.setFailedLoginAttempts(user.getFailedLoginAttempts() + 1 );
+            if(user.getFailedLoginAttempts() >= MAX_LIMIT){
+                user.setAccountLocked(true);
+                user.setLockedAt(Instant.now());
+            }            
+            userRepository.save(user);   
+            throw new BadRequestException("username or password invalid");
         }
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);        
+        refreshLoginAttempts(user);
 
         return new TokenResponse(accessToken, refreshToken);
     }
