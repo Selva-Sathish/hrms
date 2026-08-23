@@ -19,7 +19,7 @@ import com.example.user.service.AdminUserService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/admin/user")
+@RequestMapping("/admin/users")
 public class AdminUserController {
     
     private final AdminUserService adminUserService;

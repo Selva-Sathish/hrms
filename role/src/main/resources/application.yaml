@@ -1,6 +1,6 @@
 spring:
   application:
-    name: user
+    name: role
   datasource:
     url: jdbc:postgresql://postgres:5432/hrms
     username: admin
