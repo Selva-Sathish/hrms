@@ -21,7 +21,6 @@ public interface RoleMapper {
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "organisation", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     void toEntity(@MappingTarget Role role, RoleRequest request);
 }

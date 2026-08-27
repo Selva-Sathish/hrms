@@ -44,30 +44,98 @@ services:
     volumes:
       - redis_data:/data
 
-  gateway:
+  api-gateway:
+    container_name: api-gateway 
+    depends_on:
+      - auth-service
+      - user-service
+      - organisation-service
+      - role-service
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./gateway:/app
+      - maven-gateway:/root/.m2
+    build: 
+      context: ./gateway
+      dockerfile: Dockerfile.dev
+    environment:
+      JWT_SECRET: LhFpXRkVzFv9trcGM6QZFa9EfnX8Bitqf4uMB7VOgCZ
+  
+  user-service:
+    container_name: user-service
     depends_on:
       - postgres
       - kafka
-    container_name: gateway
-    build: 
-      context: ./gateway
-      dockerfile: Dockerfile
     ports:
-      - "8081:8080"
-    restart: unless-stopped
-
+      - "8084:8080"
+    volumes:
+      - ./user:/app
+      - maven-user:/root/.m2
+    build: 
+      context: ./user
+      dockerfile: Dockerfile.dev
+    environment:
+      JWT_SECRET: LhFpXRkVzFv9trcGM6QZFa9EfnX8Bitqf4uMB7VOgCZ
   auth-service:
     depends_on:
       - postgres
       - kafka
     container_name: auth-service
+    volumes:
+      - ./auth:/app
+      - maven-auth:/root/.m2
     build: 
-      context: ./user
-      dockerfile: Dockerfile
+      context: ./auth
+      dockerfile: Dockerfile.dev
+
+    environment:
+      JWT_SECRET: LhFpXRkVzFv9trcGM6QZFa9EfnX8Bitqf4uMB7VOgCZ    
+
     ports:
-      - "8080:8080"
+      - "8081:8080"
+
     restart: unless-stopped
-    
+
+  organisation-service:
+    depends_on:
+      - postgres
+      - kafka
+    environment:
+      JWT_SECRET: LhFpXRkVzFv9trcGM6QZFa9EfnX8Bitqf4uMB7VOgCZ      
+    container_name: organisation-service
+    volumes:
+      - ./organisation:/app
+      - maven-organisation:/root/.m2
+    build: 
+      context: ./organisation
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8082:8080"
+    restart: unless-stopped
+  
+  role-service:
+    depends_on:
+      - postgres
+      - kafka
+    container_name: role-service
+    volumes:
+      - ./role:/app
+      - maven-role:/root/.m2
+    environment:
+      JWT_SECRET: LhFpXRkVzFv9trcGM6QZFa9EfnX8Bitqf4uMB7VOgCZ    
+    build: 
+      context: ./role
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8083:8080"
+    restart: unless-stopped
+
 volumes:
   hrms_data:
   redis_data:
+  maven-gateway:
+  maven-user:
+  maven-auth:
+  maven-organisation:
+  maven-role:

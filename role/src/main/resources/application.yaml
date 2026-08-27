@@ -9,7 +9,6 @@ spring:
   jpa:
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         jdbc:
           timezone: Asia/Kolkata
     hibernate:

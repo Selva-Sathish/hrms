@@ -1,0 +1,38 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          secret: ${JWT_SECRET}
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: auth-service
+              uri: http://auth-service:8080
+              predicates:
+                - Path=/auth/**
+            - id: user-service
+              uri: http://user-service:8080
+              predicates:
+                - Path=/users/**
+            - id: organisation-service
+              uri: http://organisation-service:8080
+              predicates:
+                - Path=/organisations/**
+            - id: role-service
+              uri: http://role-service:8080
+              predicates:
+                - Path=/roles/**
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web: DEBUG

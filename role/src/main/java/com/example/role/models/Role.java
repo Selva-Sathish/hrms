@@ -22,9 +22,12 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String name;
     
+    @Column(nullable = false)
+    private Long organisationId;
+
     @CreationTimestamp
     @Column(insertable = false, updatable = false)
     private Instant createdAt;

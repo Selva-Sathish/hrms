@@ -7,6 +7,7 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import com.example.organisation.dto.organisation.OrganisationRequest;
+import com.example.organisation.dto.organisation.OrganisationResponse;
 import com.example.organisation.models.Organisation;
 
 @Mapper(componentModel = "spring")
@@ -18,4 +19,5 @@ public interface OrganisationMapper{
     void toEntity(@MappingTarget Organisation organisation, OrganisationRequest request);
 
 
+    OrganisationResponse toOrganisationResponse(Organisation organisation);
 }

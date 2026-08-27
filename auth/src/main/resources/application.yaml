@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: auth
+  datasource:
+    url: jdbc:postgresql://postgres:5432/hrms
+    username: admin
+    password: admin123
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+jwt:
+  secret: LhFpXRkVzFv9trcGM6QZFa9EfnX8Bitqf4uMB7VOgCZ
+services:
+  organisation-service:
+    url: http://organisation-service:8080
+  user-service:
+    url: http://user-service:8080

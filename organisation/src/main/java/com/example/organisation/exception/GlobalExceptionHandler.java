@@ -23,6 +23,19 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleAccessDenied(AccessDeniedException ex){    
+        return ResponseEntity
+            .status(HttpStatus.FORBIDDEN)
+            .body(
+                new ApiResponse<>(
+                    false,
+                    ex.getMessage(),
+                    null
+                )
+            );
+    }
+
     @ExceptionHandler(ResourceAlreadyExists.class)
     public ResponseEntity<ApiResponse<?>> handleAlreadyExists(
         ResourceAlreadyExists ex
