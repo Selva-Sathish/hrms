@@ -2,6 +2,9 @@ package com.example.auth.models;
 
 import java.time.Instant;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -19,7 +22,7 @@ import lombok.Setter;
     name = "auth_user",
     uniqueConstraints = {
         @UniqueConstraint(
-            name = "uk_auth_user_username", columnNames = "username"
+            name = "uk_auth_user_userid", columnNames = "userId"
         )
     } 
 )
@@ -34,7 +37,11 @@ public class AuthUser {
 
     @Column(nullable = false)
     private Long userId;
+    
+    @Column(nullable = false, unique = true)
     private String email;
+    
+    @Column(nullable = false)
     private String password;
     
     private boolean enabled;
@@ -44,6 +51,12 @@ public class AuthUser {
     private Instant lockUntilAt;
     private Instant passwordChangedAt;
     private Instant lastLoginAt;
+    
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 }

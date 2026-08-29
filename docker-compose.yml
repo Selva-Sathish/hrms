@@ -72,11 +72,13 @@ services:
     volumes:
       - ./user:/app
       - maven-user:/root/.m2
+      - ./user/src/main/java/com/example/user/security/keys/public-key.pem:/app/keys/public-key.pem:ro
     build: 
       context: ./user
       dockerfile: Dockerfile.dev
     environment:
       JWT_SECRET: LhFpXRkVzFv9trcGM6QZFa9EfnX8Bitqf4uMB7VOgCZ
+      JWT_PUBLIC_KEY_PATH: /app/keys/public-key.pem
   auth-service:
     depends_on:
       - postgres
@@ -84,13 +86,17 @@ services:
     container_name: auth-service
     volumes:
       - ./auth:/app
+      - ./auth/src/main/java/com/example/auth/security/keys/private-key.pem:/app/keys/private-key.pem:ro
+      - ./auth/src/main/java/com/example/auth/security/keys/public-key.pem:/app/keys/public-key.pem:ro
       - maven-auth:/root/.m2
     build: 
       context: ./auth
       dockerfile: Dockerfile.dev
 
     environment:
-      JWT_SECRET: LhFpXRkVzFv9trcGM6QZFa9EfnX8Bitqf4uMB7VOgCZ    
+      JWT_PRIVATE_KEY_PATH: /app/keys/private-key.pem
+      JWT_PUBLIC_KEY_PATH: /app/keys/public-key.pem
+      
 
     ports:
       - "8081:8080"
@@ -101,15 +107,16 @@ services:
     depends_on:
       - postgres
       - kafka
-    environment:
-      JWT_SECRET: LhFpXRkVzFv9trcGM6QZFa9EfnX8Bitqf4uMB7VOgCZ      
     container_name: organisation-service
     volumes:
       - ./organisation:/app
+      - ./organisation/src/main/java/com/example/organisation/security/keys/public-key.pem:/app/keys/public-key.pem:ro
       - maven-organisation:/root/.m2
     build: 
       context: ./organisation
       dockerfile: Dockerfile.dev
+    environment:
+      JWT_PUBLIC_KEY_PATH: /app/keys/public-key.pem  
     ports:
       - "8082:8080"
     restart: unless-stopped
@@ -123,7 +130,7 @@ services:
       - ./role:/app
       - maven-role:/root/.m2
     environment:
-      JWT_SECRET: LhFpXRkVzFv9trcGM6QZFa9EfnX8Bitqf4uMB7VOgCZ    
+      JWT_PUBLIC_KEY_PATH: D:\hrms\auth\src\main\java\com\example\auth\security\keys\public-key.pem
     build: 
       context: ./role
       dockerfile: Dockerfile.dev

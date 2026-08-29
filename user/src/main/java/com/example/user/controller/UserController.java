@@ -24,6 +24,7 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<?>> createUser(@RequestBody UserCreateRequest request){
+        System.out.println(request.getOrganisationId() + "<================>");
         UserResponse response = userService.createUser(request);
         return ResponseEntity
             .status(HttpStatus.CREATED)

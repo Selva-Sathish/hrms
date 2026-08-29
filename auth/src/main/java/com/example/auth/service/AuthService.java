@@ -1,5 +1,6 @@
 package com.example.auth.service;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.example.auth.client.OrganisationClient;
@@ -15,7 +16,10 @@ import com.example.auth.mapper.UserMapper;
 import com.example.auth.models.AuthUser;
 import com.example.auth.repository.AuthUserRepo;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Slf4j
 public class AuthService {
 
     private final AuthUserRepo authUserRepo;
@@ -24,14 +28,16 @@ public class AuthService {
     private final UserMapper userMapper;
     private final UserClient userClient;
     private final AuthUserMapper authUserMapper;
-    
+    private final PasswordEncoder passwordEncoder;
+
     public AuthService(
         AuthUserRepo authUserRepo,
         OrganisationClient organisationClient,
         UserClient userClient,
         OrganisationMapper organisationMapper,
         UserMapper userMapper,
-        AuthUserMapper authUserMapper
+        AuthUserMapper authUserMapper,
+        PasswordEncoder passwordEncoder
     ){
         this.authUserRepo = authUserRepo;
         this.organisationClient = organisationClient;
@@ -39,19 +45,20 @@ public class AuthService {
         this.userMapper = userMapper;
         this.userClient = userClient;
         this.authUserMapper = authUserMapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public void registerUser(RegisterRequest request) {
         OrganisationRequest orgRequest = organisationMapper.toOrganisationRequest(request);
-        OrganisationResponse orgResponse =  organisationClient.createOrganisation(orgRequest);  
+        OrganisationResponse orgResponse =  organisationClient.createOrganisation(orgRequest).data();  
         
         UserCreateRequest userRequest = userMapper.toCreateRequest(request);
         userRequest.setOrganisationId(orgResponse.getId());
         
-        UserResponse userResponse = userClient.createUser(userRequest);
+        UserResponse userResponse = userClient.createUser(userRequest).data();
 
         AuthUser authUser = authUserMapper.toAuthUser(userResponse);
-        
+        authUser.setPassword(passwordEncoder.encode(request.password()));
         authUserRepo.save(authUser);
     }
     

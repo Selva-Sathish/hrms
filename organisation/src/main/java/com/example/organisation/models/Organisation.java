@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -26,7 +27,7 @@ public class Organisation {
     private String name;
     
     @CreationTimestamp
-    @Column(insertable = false, updatable = false)
+    @Column(nullable = false, updatable = false)
     private Instant createdAt;
     
 }

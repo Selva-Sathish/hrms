@@ -1,4 +1,4 @@
-package com.example.user.security;
+package com.example.auth.service;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,36 +10,13 @@ import java.util.Base64;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
-@EnableWebSecurity
-public class SecurityConfig {
-    @Bean
-    public SecurityFilterChain securityFilterChain(
-        HttpSecurity http
-    ) throws Exception{
-        return http
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(
-                sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            .authorizeHttpRequests(
-                req -> req.requestMatchers("/actuator/health").permitAll()
-                    .anyRequest().authenticated()   
-            )
-            .oauth2ResourceServer(
-                oauth2 -> oauth2.jwt(jwt -> {})
-            )
-            .build();
-    }
+public class JwtConfig {
 
-        @Bean
+    @Bean
     JwtDecoder jwtDecoder(
             @Value("${jwt.public-key-path}")
             String publicKeyPath) throws Exception {
@@ -57,15 +34,15 @@ public class SecurityConfig {
         X509EncodedKeySpec spec =
                 new X509EncodedKeySpec(keyBytes);
 
-        KeyFactory factory =
+        KeyFactory keyFactory =
                 KeyFactory.getInstance("RSA");
 
         RSAPublicKey publicKey =
-                (RSAPublicKey) factory.generatePublic(spec);
+                (RSAPublicKey) keyFactory
+                        .generatePublic(spec);
 
         return NimbusJwtDecoder
                 .withPublicKey(publicKey)
                 .build();
     }
-
 }

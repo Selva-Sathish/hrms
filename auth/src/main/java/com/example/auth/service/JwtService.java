@@ -1,28 +1,24 @@
 package com.example.auth.service;
 
 import java.util.Date;
+import java.security.PrivateKey;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Base64;
-import javax.crypto.SecretKey;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 
 @Service
 public class JwtService{
 
-    @Value("${jwt.secret}")
-    private String privateKey;
-    
-    public SecretKey getSecretKey(){
-        byte[] secretKey = Base64.getDecoder().decode(privateKey);
-        return Keys.hmacShaKeyFor(secretKey);
-    }  
+    private final PrivateKey privateKey;
+    private String token;
+    Instant expiresAt;
 
+    public JwtService(PrivateKey privateKey){
+        this.privateKey = privateKey;
+    }
+    
+ 
     private Date getAccessTokenExpiry(){
         return Date.from(Instant.now().plus(15, ChronoUnit.MINUTES));
     }
@@ -32,30 +28,49 @@ public class JwtService{
     }
     
     public String generateRefreshToken(){
-        return Jwts
+        token = Jwts
             .builder()
             .claim("type", "refresh_token")
             .expiration(getRefreshTokenExpiry())
-            .signWith(getSecretKey())
+            .signWith(privateKey)
             .compact();
+        return token;
     } 
 
     public String generateAccessToken(){
-        return Jwts
+        token = Jwts
             .builder()
             .expiration(getAccessTokenExpiry())
             .claim("type", "refresh_token")
-            .signWith(getSecretKey())
+            .signWith(privateKey)
             .compact();
+        return token;
     }
 
-    public Claims parsePayload(String token){
-        return Jwts
-            .parser()
-            .verifyWith(getSecretKey())
-            .build()
-            .parseSignedClaims(token)
-            .getPayload();
-    }
 
+    public synchronized String generateToken(String audience, String scope) {
+        Instant now = Instant.now();
+        
+        if(token != null && 
+            expiresAt != null &&
+            now.isBefore(expiresAt.minusSeconds(30))
+        ){
+            return token;
+        }
+        
+        expiresAt = now.plusSeconds(360);
+        token = Jwts
+            .builder()
+            .subject("auth-service")
+            .audience()
+            .add(audience)
+            .and()
+            .claim("scope", scope)
+            .issuedAt(Date.from(now))
+            .expiration(Date.from(expiresAt))
+            .signWith(privateKey)
+            .compact();
+        
+        return token;
+    }
 }

@@ -2,6 +2,9 @@ package com.example.user.models;
 
 import java.time.Instant;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.ColumnResult;
 import jakarta.persistence.Entity;
@@ -53,9 +56,14 @@ public class User {
     
     private String nationality;
     
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false, nullable = false)
     private Instant createdAt;
+    
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
-
+    
     private boolean deleted;
 
 }

@@ -7,6 +7,10 @@ spring:
     password: admin123
   jpa:
     hibernate:
-      properties:
-        ddl-auto: create-drop
-      show_sql: true
+      ddl-auto: create-drop
+    show_sql: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          public-key-location: ${JWT_PUBLIC_KEY_PATH}
