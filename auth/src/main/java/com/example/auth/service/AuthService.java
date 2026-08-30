@@ -1,21 +1,24 @@
 package com.example.auth.service;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.example.auth.client.OrganisationClient;
-import com.example.auth.client.UserClient;
+import com.example.auth.dto.LoginRequest;
 import com.example.auth.dto.RegisterRequest;
-import com.example.auth.dto.organisation.OrganisationRequest;
-import com.example.auth.dto.organisation.OrganisationResponse;
-import com.example.auth.dto.user.UserCreateRequest;
-import com.example.auth.dto.user.UserResponse;
+import com.example.auth.dto.token.TokenResponse;
+import com.example.auth.exception.AccountLockedException;
 import com.example.auth.mapper.AuthUserMapper;
-import com.example.auth.mapper.OrganisationMapper;
-import com.example.auth.mapper.UserMapper;
 import com.example.auth.models.AuthUser;
+import com.example.auth.models.Organisation;
 import com.example.auth.repository.AuthUserRepo;
+import com.example.auth.repository.OrganisationRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -23,43 +26,83 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthService {
 
     private final AuthUserRepo authUserRepo;
-    private final OrganisationClient organisationClient;
-    private final OrganisationMapper organisationMapper;
-    private final UserMapper userMapper;
-    private final UserClient userClient;
+    private final OrganisationRepository organisationRepository;
     private final AuthUserMapper authUserMapper;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+
+    private static final int MAX_LIMIT = 5;
+    private static final int RESET_LIMIT = 0;
+    private static final int LOCK_MAX_MINUTE = 15;
 
     public AuthService(
         AuthUserRepo authUserRepo,
-        OrganisationClient organisationClient,
-        UserClient userClient,
-        OrganisationMapper organisationMapper,
-        UserMapper userMapper,
+        OrganisationRepository organisationRepository,
         AuthUserMapper authUserMapper,
-        PasswordEncoder passwordEncoder
-    ){
+        PasswordEncoder passwordEncoder,
+        JwtService jwtService
+    ) {
         this.authUserRepo = authUserRepo;
-        this.organisationClient = organisationClient;
-        this.organisationMapper = organisationMapper;
-        this.userMapper = userMapper;
-        this.userClient = userClient;
+        this.organisationRepository = organisationRepository;
         this.authUserMapper = authUserMapper;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
+    @Transactional
     public void registerUser(RegisterRequest request) {
-        OrganisationRequest orgRequest = organisationMapper.toOrganisationRequest(request);
-        OrganisationResponse orgResponse =  organisationClient.createOrganisation(orgRequest).data();  
-        
-        UserCreateRequest userRequest = userMapper.toCreateRequest(request);
-        userRequest.setOrganisationId(orgResponse.getId());
-        
-        UserResponse userResponse = userClient.createUser(userRequest).data();
+        Organisation organisation = new Organisation();
+        organisation.setName(request.organisation());
+        organisation = organisationRepository.save(organisation);
 
-        AuthUser authUser = authUserMapper.toAuthUser(userResponse);
+        AuthUser authUser = authUserMapper.toAuthUser(request);
+        authUser.setOrganisationId(organisation.getId());
         authUser.setPassword(passwordEncoder.encode(request.password()));
+        authUser.setEnabled(true);
         authUserRepo.save(authUser);
     }
-    
+
+    private void refreshLoginAttempts(AuthUser user) {
+        user.setLockUntilAt(null);
+        user.setLoginAttempts(RESET_LIMIT);
+        authUserRepo.save(user);
+    }
+
+    public TokenResponse loginUser(LoginRequest request) {
+        AuthUser user = authUserRepo.findByEmail(request.email())
+            .orElseThrow(() -> new UsernameNotFoundException("user not found"));
+
+        if (user.getLoginAttempts() >= MAX_LIMIT &&
+            user.getLastLoginAt() != null &&
+            user.getLockUntilAt().isAfter(Instant.now())
+        ) {
+            throw new AccountLockedException(
+                "Account has been locked. Try after " + LOCK_MAX_MINUTE + " minutes"
+            );
+        }
+
+        boolean isValid = passwordEncoder.matches(request.password(), user.getPassword());
+
+        if (!isValid) {
+            user.setLoginAttempts(user.getLoginAttempts() + 1);
+
+            if (user.getLoginAttempts() >= MAX_LIMIT) {
+                user.setLockUntilAt(Instant.now().plus(LOCK_MAX_MINUTE, ChronoUnit.MINUTES));
+                authUserRepo.save(user);
+                throw new AccountLockedException(
+                    "Account has been locked. Try after " + LOCK_MAX_MINUTE + " minutes"
+                );
+            }
+
+            authUserRepo.save(user);
+            throw new BadCredentialsException("Invalid Credentials");
+        }
+
+        refreshLoginAttempts(user);
+
+        String accessToken = jwtService.generateAccessToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user);
+
+        return new TokenResponse(accessToken, refreshToken);
+    }
 }

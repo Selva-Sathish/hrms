@@ -6,7 +6,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.example.auth.common.ApiResponse;
+import com.example.auth.dto.LoginRequest;
 import com.example.auth.dto.RegisterRequest;
+import com.example.auth.dto.token.TokenResponse;
 import com.example.auth.service.AuthService;
 import jakarta.validation.Valid;
 
@@ -30,5 +32,23 @@ public class AuthController {
             .body(
                 new ApiResponse<>(true, "user registered successfully", null)
             );
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<?>> loginUser(
+        @Valid @RequestBody LoginRequest request
+    ){
+        TokenResponse response = authService.loginUser(request);
+        
+        return ResponseEntity
+            .ok()
+            .body(
+                new ApiResponse<>(
+                    true, 
+                    "authenticated successfully", 
+                    response
+                )
+            );
+
     }
 }

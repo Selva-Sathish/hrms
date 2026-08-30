@@ -20,8 +20,14 @@ public record RegisterRequest(
     @NotBlank
     String firstname,
 
+    String middlename,
+
     @NotBlank
     String lastname,
 
-    String phone
+    String phone,
+
+    String gender,
+
+    String nationality
 ) {}

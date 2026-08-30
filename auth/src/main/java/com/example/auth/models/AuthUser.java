@@ -10,6 +10,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
@@ -19,12 +20,14 @@ import lombok.Setter;
 
 @Entity
 @Table(
-    name = "auth_user",
+    name = "users",
     uniqueConstraints = {
-        @UniqueConstraint(
-            name = "uk_auth_user_userid", columnNames = "userId"
-        )
-    } 
+        @UniqueConstraint(name = "uk_users_email", columnNames = "email")
+    },
+    indexes = {
+        @Index(name = "idx_users_organisation_id", columnList = "organisation_id"),
+        @Index(name = "idx_users_email", columnList = "email")
+    }
 )
 @AllArgsConstructor
 @NoArgsConstructor
@@ -36,14 +39,30 @@ public class AuthUser {
     private Long id;
 
     @Column(nullable = false)
-    private Long userId;
-    
+    private Long organisationId;
+
     @Column(nullable = false, unique = true)
     private String email;
-    
+
+    @Column(nullable = false)
+    private String firstname;
+
+    private String middlename;
+
+    @Column(nullable = false)
+    private String lastname;
+
+    private String phone;
+
+    private String gender;
+
+    private String profilePhoto;
+
+    private String nationality;
+
     @Column(nullable = false)
     private String password;
-    
+
     private boolean enabled;
 
     private int loginAttempts;
@@ -51,7 +70,9 @@ public class AuthUser {
     private Instant lockUntilAt;
     private Instant passwordChangedAt;
     private Instant lastLoginAt;
-    
+
+    private boolean deleted;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

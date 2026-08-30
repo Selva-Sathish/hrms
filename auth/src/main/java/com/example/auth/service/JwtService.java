@@ -5,6 +5,9 @@ import java.security.PrivateKey;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import org.springframework.stereotype.Service;
+
+import com.example.auth.models.AuthUser;
+
 import io.jsonwebtoken.Jwts;
 
 @Service
@@ -27,9 +30,11 @@ public class JwtService{
         return Date.from(Instant.now().plus(90, ChronoUnit.DAYS));
     }
     
-    public String generateRefreshToken(){
+    public String generateRefreshToken(AuthUser user){
         token = Jwts
             .builder()
+            .subject(user.getEmail())
+            .claim("org-id", user.getOrganisationId())
             .claim("type", "refresh_token")
             .expiration(getRefreshTokenExpiry())
             .signWith(privateKey)
@@ -37,10 +42,12 @@ public class JwtService{
         return token;
     } 
 
-    public String generateAccessToken(){
+    public String generateAccessToken(AuthUser user){
         token = Jwts
             .builder()
             .expiration(getAccessTokenExpiry())
+            .subject(user.getEmail())
+            .claim("org-id", user.getOrganisationId())
             .claim("type", "refresh_token")
             .signWith(privateKey)
             .compact();

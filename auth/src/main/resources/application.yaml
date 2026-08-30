@@ -16,8 +16,3 @@ jwt:
   private-key-path: ${JWT_PRIVATE_KEY_PATH}
   public-key-path: ${JWT_PUBLIC_KEY_PATH}
   issuer: auth-service
-services:
-  organisation-service:
-    url: http://organisation-service:8080
-  user-service:
-    url: http://user-service:8080
