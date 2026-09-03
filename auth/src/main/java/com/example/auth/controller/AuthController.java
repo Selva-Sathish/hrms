@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.auth.common.ApiResponse;
 import com.example.auth.dto.LoginRequest;
 import com.example.auth.dto.RegisterRequest;
+import com.example.auth.dto.token.RefreshTokenRequest;
+import com.example.auth.dto.token.RefreshTokenResponse;
 import com.example.auth.dto.token.TokenResponse;
 import com.example.auth.service.AuthService;
 import jakarta.validation.Valid;
@@ -17,7 +19,7 @@ import jakarta.validation.Valid;
 public class AuthController {
     
     private final AuthService authService;
-
+    
     public AuthController(AuthService authService){
         this.authService = authService;
     }
@@ -51,4 +53,21 @@ public class AuthController {
             );
 
     }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<RefreshTokenResponse>> refreshToken(
+        @Valid @RequestBody RefreshTokenRequest request
+    ){
+        RefreshTokenResponse response = authService.refreshToken(request);
+        
+        return ResponseEntity
+            .ok()
+            .body(
+                new ApiResponse<>(
+                    true,
+                    "refresh generated successfully",
+                    response
+                )
+            );
+    } 
 }

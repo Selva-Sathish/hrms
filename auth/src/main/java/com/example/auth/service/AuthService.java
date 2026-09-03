@@ -10,15 +10,22 @@ import org.springframework.stereotype.Service;
 
 import com.example.auth.dto.LoginRequest;
 import com.example.auth.dto.RegisterRequest;
+import com.example.auth.dto.role.RoleResponse;
+import com.example.auth.dto.token.RefreshTokenRequest;
+import com.example.auth.dto.token.RefreshTokenResponse;
 import com.example.auth.dto.token.TokenResponse;
 import com.example.auth.exception.AccountLockedException;
+import com.example.auth.exception.UnauthorizedException;
 import com.example.auth.mapper.AuthUserMapper;
 import com.example.auth.models.AuthUser;
 import com.example.auth.models.Organisation;
+import com.example.auth.models.Role;
 import com.example.auth.repository.AuthUserRepo;
 import com.example.auth.repository.OrganisationRepository;
 
+import jakarta.security.auth.message.AuthException;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -30,6 +37,7 @@ public class AuthService {
     private final AuthUserMapper authUserMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final RoleService roleService;
 
     private static final int MAX_LIMIT = 5;
     private static final int RESET_LIMIT = 0;
@@ -40,13 +48,15 @@ public class AuthService {
         OrganisationRepository organisationRepository,
         AuthUserMapper authUserMapper,
         PasswordEncoder passwordEncoder,
-        JwtService jwtService
+        JwtService jwtService,
+        RoleService roleService
     ) {
         this.authUserRepo = authUserRepo;
         this.organisationRepository = organisationRepository;
         this.authUserMapper = authUserMapper;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.roleService = roleService;
     }
 
     @Transactional
@@ -55,10 +65,16 @@ public class AuthService {
         organisation.setName(request.organisation());
         organisation = organisationRepository.save(organisation);
 
+        Role role = new Role();
+        role.setName("ORG_ADMIN");
+        role.setOrganisation(organisation);
+        Role roleResponse = roleService.createRole(role);
+
         AuthUser authUser = authUserMapper.toAuthUser(request);
-        authUser.setOrganisationId(organisation.getId());
+        authUser.setOrganisation(organisation);
         authUser.setPassword(passwordEncoder.encode(request.password()));
         authUser.setEnabled(true);
+        authUser.getRoles().add(roleResponse);
         authUserRepo.save(authUser);
     }
 
@@ -105,4 +121,20 @@ public class AuthService {
 
         return new TokenResponse(accessToken, refreshToken);
     }
+
+    public RefreshTokenResponse refreshToken(RefreshTokenRequest request) {
+        if(!jwtService.isRefreshTokenValid(request.refreshToken())){
+           throw new UnauthorizedException("user is not authenticated"); 
+        }
+        String email = jwtService.getSubject(request.refreshToken());
+        AuthUser user = authUserRepo.findByEmail(email)
+            .orElseThrow(() -> new UsernameNotFoundException("user not found"));
+        String accessToken = jwtService.generateAccessToken(user);
+    
+        RefreshTokenResponse response = new RefreshTokenResponse();
+        response.setAccessToken(accessToken);
+        return response;
+    }
+
+    
 }

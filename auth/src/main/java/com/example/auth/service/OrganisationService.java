@@ -1,9 +1,12 @@
 package com.example.auth.service;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.example.auth.common.ApiResponse;
 import com.example.auth.dto.organisation.OrganisationRequest;
 import com.example.auth.dto.organisation.OrganisationResponse;
+import com.example.auth.exception.BadRequestException;
 import com.example.auth.exception.ResourceAlreadyExists;
 import com.example.auth.exception.ResourceNotFoundException;
 import com.example.auth.mapper.OrganisationMapper;
@@ -52,12 +55,20 @@ public class OrganisationService {
     }
 
     public void deleteById(Long id) {
+        if(currentUser.getOrganisationId() != id){
+            throw new BadRequestException("organisation not found");
+        }        
         Organisation organisation = organisationRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("organisation not found"));
         organisationRepository.delete(organisation);
     }
 
     public OrganisationResponse updateOrganisation(Long id, OrganisationRequest request) {
+        
+        if(currentUser.getOrganisationId() != id){
+            throw new BadRequestException("organisation not found");
+        }
+
         Organisation organisation = organisationRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("organisation not found"));
 
@@ -68,5 +79,15 @@ public class OrganisationService {
         organisationMapper.toEntity(organisation, request);
         organisation = organisationRepository.save(organisation);
         return organisationMapper.toOrganisationResponse(organisation);
+    }
+
+    public OrganisationResponse getOrganisationById(Long organisationId) {
+        if(currentUser.getOrganisationId() != organisationId){
+            throw new BadRequestException("organisation not found");
+        }
+        Organisation org = organisationRepository.findById(organisationId)
+            .orElseThrow(() -> new ResourceNotFoundException("organisation not found"));
+        
+        return organisationMapper.toOrganisationResponse(org);
     }
 }

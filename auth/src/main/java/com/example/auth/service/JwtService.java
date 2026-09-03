@@ -4,11 +4,15 @@ import java.util.Date;
 import java.security.PrivateKey;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import org.springframework.stereotype.Service;
 
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.stereotype.Service;
 import com.example.auth.models.AuthUser;
 
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import jakarta.validation.constraints.NotBlank;
 
 @Service
 public class JwtService{
@@ -16,9 +20,14 @@ public class JwtService{
     private final PrivateKey privateKey;
     private String token;
     Instant expiresAt;
-
-    public JwtService(PrivateKey privateKey){
+    private final JwtDecoder jwtDecoder;
+    
+    public JwtService(
+        PrivateKey privateKey,
+        JwtDecoder jwtDecoder
+    ){
         this.privateKey = privateKey;
+        this.jwtDecoder = jwtDecoder;
     }
     
  
@@ -34,8 +43,8 @@ public class JwtService{
         token = Jwts
             .builder()
             .subject(user.getEmail())
-            .claim("org-id", user.getOrganisationId())
-            .claim("type", "refresh_token")
+            .claim("org-id", user.getOrganisation().getId())
+            .claim("tokenType", "refreshToken")
             .expiration(getRefreshTokenExpiry())
             .signWith(privateKey)
             .compact();
@@ -47,8 +56,8 @@ public class JwtService{
             .builder()
             .expiration(getAccessTokenExpiry())
             .subject(user.getEmail())
-            .claim("org-id", user.getOrganisationId())
-            .claim("type", "refresh_token")
+            .claim("org-id", user.getOrganisation().getId())
+            .claim("tokenType", "refreshToken")
             .signWith(privateKey)
             .compact();
         return token;
@@ -79,5 +88,21 @@ public class JwtService{
             .compact();
         
         return token;
+    }
+
+
+    public boolean isRefreshTokenValid(String refreshToken) {
+        try {
+            Jwt jwt = jwtDecoder.decode(refreshToken);
+            return jwt.getClaimAsString("tokenType")
+                .equals("refreshToken");
+        } catch (JwtException e) {
+            return false;
+        }
+    }
+
+    public String getSubject(String refreshToken) {
+        Jwt jwt = jwtDecoder.decode(refreshToken);
+        return jwt.getSubject();    
     }
 }

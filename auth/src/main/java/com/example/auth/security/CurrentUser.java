@@ -10,12 +10,12 @@ public class CurrentUser {
     public Long getOrganisationId() {
         JwtAuthenticationToken authentication =
             (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-        return authentication.getToken().getClaim("org_id");
+        return authentication.getToken().getClaim("org-id");
     }
 
-    public Long getUserId() {
+    public String getUserId() {
         JwtAuthenticationToken authentication =
             (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-        return authentication.getToken().getClaim("user_id");
+        return authentication.getToken().getSubject();
     }
 }

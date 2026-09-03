@@ -4,7 +4,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
 import com.example.auth.common.ApiResponse;
 
 @RestControllerAdvice
@@ -65,5 +64,18 @@ public class GlobalExceptionHandler {
                     null
                 )
             );
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ApiResponse<?>> handleUnauthorized(
+        UnauthorizedException ex
+    ){
+        return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(new ApiResponse<>(
+                false,
+                ex.getMessage(),
+                null 
+            ));
     }
 }
